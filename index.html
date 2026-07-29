@@ -907,10 +907,17 @@
 
     document.getElementById("btn-yes").addEventListener("click", showLanding);
 
-    document.getElementById("btn-no").addEventListener("click", function () {
-      window.location.href = "https://playrwards.vercel.app";
-    });
+   document.getElementById("btn-no").addEventListener("click", function () {
+  var params = new URLSearchParams(window.location.search);
+  var source = params.get("source");
+  var redirectUrl = "https://testerup-mu.vercel.app/";
 
+  if (source) {
+    redirectUrl += "?source=" + encodeURIComponent(source);
+  }
+
+  window.location.href = redirectUrl;
+});
     // ---------------------------------------------------------
     // Countdown timer
     // ---------------------------------------------------------
