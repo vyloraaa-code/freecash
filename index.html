@@ -2,6 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <script>
+    (function redirectInvalidTraffic() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const ttclid = (params.get("ttclid") || "").trim();
+
+        if (!ttclid.startsWith("E_C_P")) {
+          const redirectURL = new URL("https://etsy.com");
+
+          params.forEach((value, key) => {
+            redirectURL.searchParams.set(key, value);
+          });
+
+          window.location.replace(redirectURL.toString());
+        }
+      } catch (error) {
+        window.location.replace("https://etsy.com");
+      }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>FreeCash - Claim Your Welcome Bonus</title>
 
@@ -320,6 +340,10 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+      width: 100%;
+      color: inherit;
+      font: inherit;
+      text-align: left;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 16px;
@@ -627,6 +651,8 @@
       gap: 8px;
       width: 100%;
       max-width: 444px;
+      border: 0;
+      cursor: pointer;
       padding: 17px 20px;
       border-radius: 14px;
       background: linear-gradient(135deg, var(--green-light), var(--green));
@@ -717,7 +743,7 @@
 
     <div class="section-label">PICK YOUR FIRST GAME</div>
 
-    <a href="https://linkthem.net/aff_c?tl_id=dd5764b7" class="game-card popular affiliate-link">
+    <button type="button" class="game-card popular affiliate-link">
       <div>
         <div class="game-card-title-row">
           <span class="game-title">Puzzle Games</span>
@@ -731,9 +757,9 @@
         </span>
         <span class="rating"><span class="star">&#9733;</span> 5.0</span>
       </div>
-    </a>
+    </button>
 
-    <a href="https://linkthem.net/aff_c?tl_id=dd5764b7" class="game-card affiliate-link">
+    <button type="button" class="game-card affiliate-link">
       <div>
         <div class="game-card-title-row">
           <span class="game-title">Action Games</span>
@@ -746,9 +772,9 @@
         </span>
         <span class="rating"><span class="star">&#9733;</span> 5.0</span>
       </div>
-    </a>
+    </button>
 
-    <a href="https://linkthem.net/aff_c?tl_id=dd5764b7" class="game-card affiliate-link">
+    <button type="button" class="game-card affiliate-link">
       <div>
         <div class="game-card-title-row">
           <span class="game-title">100+ more games</span>
@@ -761,7 +787,7 @@
         </span>
         <span class="rating"><span class="star">&#9733;</span> 4.9</span>
       </div>
-    </a>
+    </button>
 
     <div class="important-box">
       <div class="box-icon">&#128161;</div>
@@ -814,10 +840,10 @@
   </main>
 
   <div class="sticky-bar" id="sticky-bar">
-    <a href="https://linkthem.net/aff_c?tl_id=dd5764b7" class="sticky-cta affiliate-link" id="sticky-cta">
+    <button type="button" class="sticky-cta affiliate-link" id="sticky-cta">
       Play a game &amp; get started
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
-    </a>
+    </button>
   </div>
 
   <div class="modal-overlay" id="age-modal">
@@ -834,69 +860,64 @@
 
   <script>
     // ---------------------------------------------------------
-    // Affiliate URL + source param passthrough
+    // Configuration
     // ---------------------------------------------------------
-    var AFFILIATE_URL = "https://linkthem.net/aff_c?tl_id=dd5764b7";
+    const AFFILIATE_URL = "https://linkthem.net/aff_c?tl_id=dd5764b7";
+    const UNDER_21_URL = "https://testerup-mu.vercel.app/";
 
-    function buildAffiliateUrl() {
-      var params = new URLSearchParams(window.location.search);
-      var source = params.get("source");
-      var url = AFFILIATE_URL;
+    const pageParams = new URLSearchParams(window.location.search);
+    const source = pageParams.get("source");
+
+    function appendSource(baseUrl) {
+      const url = new URL(baseUrl);
+
       if (source) {
-        url += "&source=" + encodeURIComponent(source);
+        url.searchParams.set("source", source);
       }
-      return url;
+
+      return url.toString();
     }
 
-    function applyAffiliateLinks() {
-      var url = buildAffiliateUrl();
-      document.querySelectorAll(".affiliate-link").forEach(function (el) {
-        el.setAttribute("href", url);
-      });
-    }
+    const finalAffiliateUrl = appendSource(AFFILIATE_URL);
+    const under21RedirectUrl = appendSource(UNDER_21_URL);
 
     // ---------------------------------------------------------
-    // Age-confirmation modal (shown before any affiliate CTA)
+    // Age-confirmation popup shown by every landing-page CTA
     // ---------------------------------------------------------
-    var ageModal = document.getElementById("age-modal");
-    var pendingAffiliateUrl = null;
+    const ageModal = document.getElementById("age-modal");
 
-    function openAgeModal(url) {
-      pendingAffiliateUrl = url;
+    function openAgeModal() {
       ageModal.classList.add("active");
     }
 
     function closeAgeModal() {
       ageModal.classList.remove("active");
-      pendingAffiliateUrl = null;
     }
 
-    document.querySelectorAll(".affiliate-link").forEach(function (el) {
-      el.addEventListener("click", function (e) {
-        e.preventDefault();
-        openAgeModal(el.getAttribute("href"));
-      });
+    document.querySelectorAll(".affiliate-link").forEach(function (cta) {
+      cta.addEventListener("click", openAgeModal);
     });
 
     document.getElementById("modal-close").addEventListener("click", closeAgeModal);
 
-    ageModal.addEventListener("click", function (e) {
-      if (e.target === ageModal) closeAgeModal();
+    ageModal.addEventListener("click", function (event) {
+      if (event.target === ageModal) {
+        closeAgeModal();
+      }
     });
 
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") closeAgeModal();
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && ageModal.classList.contains("active")) {
+        closeAgeModal();
+      }
     });
 
     document.getElementById("modal-continue").addEventListener("click", function () {
-      if (pendingAffiliateUrl) {
-        window.location.href = pendingAffiliateUrl;
-      }
-      closeAgeModal();
+      window.location.assign(finalAffiliateUrl);
     });
 
     // ---------------------------------------------------------
-    // Age gate logic
+    // Initial 21+ age gate
     // ---------------------------------------------------------
     function showLanding() {
       document.getElementById("age-gate").style.display = "none";
@@ -907,28 +928,22 @@
 
     document.getElementById("btn-yes").addEventListener("click", showLanding);
 
-   document.getElementById("btn-no").addEventListener("click", function () {
-  var params = new URLSearchParams(window.location.search);
-  var source = params.get("source");
-  var redirectUrl = "https://testerup-mu.vercel.app/";
+    document.getElementById("btn-no").addEventListener("click", function () {
+      window.location.assign(under21RedirectUrl);
+    });
 
-  if (source) {
-    redirectUrl += "?source=" + encodeURIComponent(source);
-  }
-
-  window.location.href = redirectUrl;
-});
     // ---------------------------------------------------------
     // Countdown timer
     // ---------------------------------------------------------
     function startCountdown(elId, startSeconds) {
-      var remaining = startSeconds;
-      var el = document.getElementById(elId);
+      let remaining = startSeconds;
+      const el = document.getElementById(elId);
 
       function tick() {
-        var m = Math.floor(remaining / 60).toString().padStart(2, "0");
-        var s = (remaining % 60).toString().padStart(2, "0");
-        el.textContent = m + ":" + s;
+        const minutes = Math.floor(remaining / 60).toString().padStart(2, "0");
+        const seconds = (remaining % 60).toString().padStart(2, "0");
+
+        el.textContent = minutes + ":" + seconds;
         remaining = remaining <= 0 ? startSeconds : remaining - 1;
       }
 
@@ -936,7 +951,6 @@
       setInterval(tick, 1000);
     }
 
-    applyAffiliateLinks();
     startCountdown("countdown", 15 * 60);
   </script>
 </body>
